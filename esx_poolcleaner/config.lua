@@ -1,54 +1,75 @@
 Config                            = {}
-Config.DrawDistance               = 100.0
-Config.nameJob                    = "poolcleaner"
-Config.nameJobLabel               = "Pool Cleaner"
-Config.platePrefix                = "POOL"
+Config.DrawDistance               = 30.0
 Config.Locale                     = 'en'
+Config.nameJob					  = 'poolcleaner' -- The name of the job. Important to not misspell or else it won't work
+Config.Item						  = 'poolreceipt' -- Name of the item which is given and then sold by the player
+Config.Multiplier				  = '100' -- This how much money do want so a 100x multiplier is 100$ for 1 receipt
+Config.Cleantime				  = '20000' -- It is in ms so this would be 20 seconds
+-- Controls
+Config.KeyClean 				  =  38 -- Control for starting the cleaning in the marker.  || All controls can be found here https://docs.fivem.net/docs/game-references/controls/
+Config.Key  					  =  38	-- Control for opening menus in markers	
+Config.KeyJobStart 				  =  212 -- Control for starting and ending job
+
 
 Config.Blip = {
 	Sprite = 389,
-	Color = 3
+	Color = 3,
 }
 
 Config.Vehicles = {
-	Truck = {
-		Spawner = 1,
-		Label = 'Cleaner Utility',
-		Hash = "bison",
-		Livery = 1,
-		Trailer = "none",
-	}
+	Hash = "bison" -- Hash of the vehicle. All of the hashes can be found here https://gtahash.ru/car/
 }
 
 Config.Zones = {
 	Cloakroom = {
-		
 		Pos = vector3(-1320.2,-1263.4,2.7),
-
+		Type = 21,
+		R = 255, 
+		G = 255, 
+		B = 255,
+		Size = 1.0,
 	},
 
 	VehicleSpawn = {
 		Pos = vector3(-1307.94, -1250.86,  4.54),
-
+		Type = 36,
+		R = 255, 
+		G = 255, 
+		B = 255,
+		Size = 1.0,
 	},
 
 	VehicleSpawnPoint = {
 		Pos   = {x = -1320.75, y = -1254.54, z = 3.6},
 		Size  = {x = 3.0, y = 3.0, z = 1.0},
-		Type  = -1,
 		Heading = 258.27,
 	},
 
 	VehicleDeleter = {
 		Pos = vector3(-1309.57, -1243.54,  4.54),
+		Type = 36,
+		R = 255, 
+		G = 0, 
+		B = 0,
+		Size = 1.0,
 	},
 
 	ReceiptSell = {
 		Pos = vector3(-1307.7445, -1261.7769, 4.5388),
+		Type = 29,
+		R = 0, 
+		G = 255, 
+		B = 0,
+		Size = 1.0,
 	},
 
 }
-Config.Pool = {
+Config.Pool = { 
+	R = 186, 
+	G = 12, 
+	B = 0,
+	Type = 2,
+	Size = 1.0,
 	vector3{ -1342.4207, -930.7485, 11.7531}, 
 	vector3{ -582.2297, 104.5204, 68.3715}, 
 	vector3{ -888.7083, -40.6808, 38.2400}, 
@@ -66,7 +87,7 @@ Config.Pool = {
 }
 
 
-for i=1, #Config.Pool, 1 do
+for i=1, #Config.Pool, 1 do -- this is the marker for the pools
 
 	Config.Zones['Pool' .. i] = {
 		Pos   = Config.Pool[i],

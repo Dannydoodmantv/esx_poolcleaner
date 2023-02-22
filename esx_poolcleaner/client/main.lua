@@ -1,13 +1,7 @@
 
 ESX                             =  exports["es_extended"]:getSharedObject()
 local PlayerData                = {}
-local GUI                       = {}
-GUI.Time                        = 0
 local HasAlreadyEnteredMarker   = false
-local LastZone                  = nil
-local CurrentAction             = nil
-local CurrentActionMsg          = ''
-local CurrentActionData         = {}
 local onDuty                    = false
 local BlipCloakRoom             = nil
 local BlipVehicle               = nil
@@ -15,8 +9,7 @@ local BlipVehicleDeleter		= nil
 local Blips                     = {}
 local OnJob                     = false
 local Done 						= false
-local contextmenu  = false
-local isinwork = false
+local isinwork 					= false  
 
 
 
@@ -35,7 +28,6 @@ AddEventHandler('esx:setJob', function(job)
 end)
 
 -- NPC MISSIONS
-
 function SelectPool()
 	local index = GetRandomIntInRange(1,  #Config.Pool)
 
@@ -54,7 +46,7 @@ function StartNPCJob()
 	local zone            = Config.Zones[NPCTargetPool]
 	Blips['NPCTargetPool'] = AddBlipForCoord(zone.Pos.x,  zone.Pos.y,  zone.Pos.z)
 	SetBlipRoute(Blips['NPCTargetPool'], true)
-	exports['mythic_notify']:SendAlert('warn', 'Jeď na danou lokaci která je na mapě')
+    exports['mythic_notify']:SendAlert('warn', _U('GPS_info'))
 	Done = true
 	Onjob = true
 
@@ -69,7 +61,7 @@ function StopNPCJob(cancel)
 	OnJob = false
 
 	if cancel then
-		exports['mythic_notify']:SendAlert('warn', 'Zrušil si objednávku')
+		exports['mythic_notify']:SendAlert('warn', _U('cancel_mission'))
 	else
 		TriggerServerEvent('p_cleanergive:givereceipt')
 		StartNPCJob()
@@ -90,13 +82,13 @@ Citizen.CreateThread(function()
 			local zonec = vector3(zone.Pos.x,  zone.Pos.y,  zone.Pos.z)
 			local playerPed = GetPlayerPed(-1)
 			local dist = #(zonec - v2)
-			if dist < 15 then
-				DrawMarker(2, zone.Pos.x, zone.Pos.y, zone.Pos.z , 0.0, 0.0, 0.0, 0.0, 180.0, 0.0, 1.0, 1.0, 1.0, 255, 128, 0, 50, false, true, 2, nil, nil, false)
+			if dist < Config.DrawDistance then
+				DrawMarker(Config.Pool.Type, zone.Pos.x, zone.Pos.y, zone.Pos.z , 0.0, 0.0, 0.0, 0.0, 180.0, 0.0, Config.Pool.Size,Config.Pool.Size, Config.Pool.Size, Config.Pool.R, Config.Pool.G, Config.Pool.B, 50, false, true, 2, nil, nil, false)
 				if dist < 2 then
-					lib.showTextUI('[E] - Vyčistit')
-					if IsControlJustReleased(1, 38)  then
+					lib.showTextUI('[E] - '.. _U('clean'))
+					if IsControlJustReleased(1, Config.KeyClean)  then
 						lib.progressCircle({
-							duration = 20000,
+							duration = Config.Cleantime,
 							position = 'bottom',
 							useWhileDead = false,
 							canCancel = false,
@@ -141,7 +133,7 @@ RegisterNetEvent('p_setuniform')
 		})
 		lib.notify({
 			title = 'Pool Cleaner',
-			description = 'Přišel si do práce',
+			description = _U('take_service_notif'),
 			type = 'success',
 			icon = 'person-digging'
 		})
@@ -150,7 +142,7 @@ RegisterNetEvent('p_setuniform')
 	elseif isinwork == true then
 		lib.notify({
 			title = 'Pool Cleaner',
-			description = 'Již pracuješ',
+			description = _U('already_w'),
 			type = 'error',
 			icon = 'x'
 		})
@@ -176,7 +168,7 @@ RegisterNetEvent('p_setuniform')
 		})
 		lib.notify({
 			title = 'Pool Cleaner',
-			description = 'Odešel si z práce',
+			description = _U('end_service_notif'),
 			type = 'error',
 			icon = 'person-digging'
 		})
@@ -185,7 +177,7 @@ RegisterNetEvent('p_setuniform')
 	elseif isinwork == false then
 		lib.notify({
 			title = 'Pool Cleaner',
-			description = 'Jěště  nepracuješ',
+			description = _U('already_w'),
 			type = 'error',
 			icon = 'x'
 		})
@@ -213,33 +205,30 @@ RegisterNetEvent('p_setuniform')
 
 	lib.registerContext({
 		id = 'p_cleaner_p',
-		title = 'Převlíkárny',
+		title = 'Cloakroom',
 		options = {
 			{
-				title = 'Pracovní oblečení',
+				title = 'Work Uniform',
 				icon = 'fa-vest-patches',
 				arrow = false,
-				metadata = {'Začneš pracovat'},
 				event = 'p_setuniform'
 			},
 			{
-				title = 'Civilní oblečení',
+				title = 'Civilian Uniform',
 				icon = 'fa-shirt',
 				arrow = false,
-				metadata = {'Přestaneš pracovat'},
 				event = 'p_setciv'
 	
 			},
 			{
-				title = 'Pomoc',
+				title = 'Help',
 				icon = 'fa-question',
 				arrow = false,
-				metadata = {'Zjistiš všechno ohledně práce'},
 				onSelect = function()
 
 					local alert =	lib.alertDialog({
-						   header = 'Pomoc',
-						   content = '1. Musíš se převléct  \n 2. Poté si vezmeš firemní vozidlo \n 3. Ve vozidle stiskneš klávesu HOME \n 4. V oranžovém markeru stiskneš klávesu E a poté dostaneš účtenku \n 5. Účtenku můžeš poté prodat u převlíkárny v zeleným markeru',
+						   header = 'Help',
+						   content = _U('help_t'),
 						   centered = true,
 						   cancel = true
 					   })
@@ -253,13 +242,12 @@ RegisterNetEvent('p_setuniform')
 
 	lib.registerContext({
 		id = 'p_cleaner_v',
-		title = 'Garáž',
+		title = 'Garages',
 		options = {
 			{
-				title = 'Firemní vozidlo',
+				title = 'Work Car',
 				icon = 'fa-car',
 				arrow = false,
-				metadata = {'Vytáhneš si firemní vozidlo'},
 				event = 'p_spawnvehicle'
 			},
 		}
@@ -269,19 +257,7 @@ RegisterNetEvent('p_setuniform')
 function CloakRoomMenu()
 
 	lib.showContext('p_cleaner_p')
-	local contextmenu = true
 
-end
-
-function openhelpdialog()
-
- local alert =	lib.alertDialog({
-		header = 'Pomoc',
-		content = '1. Musíš se převléct  \n 2. Poté si vezmeš firemní vozidlo \n 3. Ve vozidle stiskneš klávesu HOME \n 4. V oranžovém markeru stiskneš klávesu E a poté dostaneš účtenku \n 5. Účtenku můžeš poté prodat u převlíkárny v zeleným markeru',
-		centered = true,
-		cancel = true
-	})
-	print(alert)
 end
 
 
@@ -291,7 +267,7 @@ function VehicleMenu()
 end
 
 function ReceiptSell()
-	local input = lib.inputDialog('Prodejna účtenek', {'Počet na prodej'})
+	local input = lib.inputDialog(_U('InputName'), {_U('InputPlaceholder')})
 	if not input then return end
 	local lockerNumber = tonumber(input[1])
 	TriggerServerEvent("p_sellreceipts", lockerNumber)
@@ -306,7 +282,7 @@ function CreateBlip()
 			SetBlipColour(BlipCloakRoom, 3)
 			SetBlipAsShortRange(BlipCloakRoom, true)
 			BeginTextCommandSetBlipName("STRING")
-			AddTextComponentString('Pool Cleaner')
+			AddTextComponentString(_U('blipname'))
 			SetBlipScale(BlipCloakRoom, 0.8)
 			EndTextCommandSetBlipName(BlipCloakRoom)
 		end
@@ -342,43 +318,43 @@ Citizen.CreateThread(function()
 				TriggerEvent('esx_poolcleaner:hasExitedMarker', LastZone)
 			end	
 
+			local danny = true
 
-
-			if PlayerData.job.name == Config.nameJob then
-					if dist < 10  then
-						DrawMarker(21, Config.Zones.Cloakroom.Pos.x, Config.Zones.Cloakroom.Pos.y, Config.Zones.Cloakroom.Pos.z + 2, 0.0, 0.0, 0.0, 0.0, 180.0, 0.0, 1.0, 1.0, 1.0, 255, 255, 255, 100, false, true, 2, nil, nil, false)
+			if danny == true then
+					if dist < Config.DrawDistance  then
+						DrawMarker(Config.Zones.Cloakroom.Type, Config.Zones.Cloakroom.Pos.x, Config.Zones.Cloakroom.Pos.y, Config.Zones.Cloakroom.Pos.z + 2, 0.0, 0.0, 0.0, 0.0, 180.0, 0.0, Config.Zones.Cloakroom.Size, Config.Zones.Cloakroom.Size,Config.Zones.Cloakroom.Size, Config.Zones.Cloakroom.R, Config.Zones.Cloakroom.G, Config.Zones.Cloakroom.B, 100, false, true, 2, nil, nil, false)
 					end
-					if dist2 < 10 and onDuty == true then
-						DrawMarker(36, Config.Zones.VehicleSpawn.Pos.x, Config.Zones.VehicleSpawn.Pos.y, Config.Zones.VehicleSpawn.Pos.z, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 1.0, 1.0, 1.0, 255, 255, 255, 100, false, true, 2, nil, nil, false)
+					if dist2 < Config.DrawDistance and onDuty == true then
+						DrawMarker(Config.Zones.VehicleSpawn.Type, Config.Zones.VehicleSpawn.Pos.x, Config.Zones.VehicleSpawn.Pos.y, Config.Zones.VehicleSpawn.Pos.z, 0.0, 0.0, 0.0, 0.0, 0, 0.0, Config.Zones.VehicleSpawn.Size, Config.Zones.VehicleSpawn.Size, Config.Zones.VehicleSpawn.Size, Config.Zones.VehicleSpawn.R, Config.Zones.VehicleSpawn.G, Config.Zones.VehicleSpawn.B, 100, false, true, 2, nil, nil, false)
 							
 					end
-					if dist4 < 10 and IsPedInAnyVehicle(PlayerPedId(), false) then
-						DrawMarker(36, Config.Zones.VehicleDeleter.Pos.x, Config.Zones.VehicleDeleter.Pos.y, Config.Zones.VehicleDeleter.Pos.z, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 1.0, 1.0, 1.0, 255, 0, 0, 100, false, true, 2, nil, nil, false)
+					if dist4 < Config.DrawDistance and IsPedInAnyVehicle(PlayerPedId(), false) then
+						DrawMarker(Config.Zones.VehicleDeleter.Type, Config.Zones.VehicleDeleter.Pos.x, Config.Zones.VehicleDeleter.Pos.y, Config.Zones.VehicleDeleter.Pos.z, 0.0, 0.0, 0.0, 0.0, 0, 0.0, Config.Zones.VehicleDeleter.Size, Config.Zones.VehicleDeleter.Size, Config.Zones.VehicleDeleter.Size, Config.Zones.VehicleDeleter.R, Config.Zones.VehicleDeleter.G, Config.Zones.VehicleDeleter.B, 100, false, true, 2, nil, nil, false)
 						DeleterShown = true
 					end
-					if dist5 < 10  then
-						DrawMarker(29, Config.Zones.ReceiptSell.Pos.x, Config.Zones.ReceiptSell.Pos.y, Config.Zones.ReceiptSell.Pos.z, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 1.0, 1.0, 1.0, 0, 255, 0, 100, false, true, 2, nil, nil, false)
+					if dist5 < Config.DrawDistance  then
+						DrawMarker(Config.Zones.ReceiptSell.Type, Config.Zones.ReceiptSell.Pos.x, Config.Zones.ReceiptSell.Pos.y, Config.Zones.ReceiptSell.Pos.z, 0.0, 0.0, 0.0, 0.0, 0, 0.0, Config.Zones.ReceiptSell.Size, Config.Zones.ReceiptSell.Size, Config.Zones.ReceiptSell.Size, Config.Zones.ReceiptSell.R, Config.Zones.ReceiptSell.G, Config.Zones.ReceiptSell.B, 100, false, true, 2, nil, nil, false)
 
 					end
 					if dist < 2 then
 						isInMarker  = true
-						lib.showTextUI('[E] - Převlíkárny')
-						if IsControlJustReleased(1, 38) then
+						lib.showTextUI('[E] - '.._U('cloakroom'))
+						if IsControlJustReleased(1, Config.Key) then
 							CloakRoomMenu()
 						end
 					elseif dist2 < 2 and onDuty == true then
-						lib.showTextUI('[E] - Garáž')
-						if IsControlJustReleased(1, 38) then
+						lib.showTextUI('[E] - '.._U('garage'))
+						if IsControlJustReleased(1, Config.Key) then
 							VehicleMenu()
 						end
 					elseif dist4 < 2 and DeleterShown == true then
-						lib.showTextUI('[E] - Uschovat vozidlo')
-						if IsControlJustReleased(1, 38) then
+						lib.showTextUI('[E] - '.._U('deleter'))
+						if IsControlJustReleased(1, Config.Key) then
 							DeleteVehicle(vehicle)
 						end
 					elseif dist5 < 2 then
-						lib.showTextUI('[E] - Prodat účtenky')
-						if IsControlJustReleased(1, 38) then
+						lib.showTextUI('[E] - '.._U('seller'))
+						if IsControlJustReleased(1, Config.Key) then
 							ReceiptSell()
 						end
 					else	
@@ -398,21 +374,21 @@ end)
 		while true do
 			Citizen.Wait(7)
 			
-			if IsControlJustReleased(1, 212) and onDuty == true then
+			if IsControlJustReleased(1, Config.KeyJobStart) and onDuty == true then
 				if Onjob then
 				StopNPCJob(true)
 				RemoveBlip(Blips['NPCTargetPool'])
 				Onjob = false
 			else
 				local playerPed = GetPlayerPed(-1)
-				if IsPedInAnyVehicle(playerPed,  false) and IsVehicleModel(GetVehiclePedIsIn(playerPed,  false), GetHashKey("bison")) then
+				if IsPedInAnyVehicle(playerPed,  false) and IsVehicleModel(GetVehiclePedIsIn(playerPed,  false), GetHashKey(Config.Vehicles.Hash)) then
 				StartNPCJob()
 				Onjob = true
 			else
-				exports['mythic_notify']:SendAlert('error', 'Musíš sedět v firemním vozidle')
+				exports['mythic_notify']:SendAlert('error', _U('wrongcar'))
 			end
 		end
-end
+			end
 		end
 	end)
 
