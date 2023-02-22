@@ -1,21 +1,23 @@
 
 # esx_poolcleaner
 
-A modified version of the FiveM script "ESX_Poolcleaner" by Cha0sNighT
-https://github.com/Cha0sNighT/esx_poolcleaner
+This is a modified version of this script https://github.com/Cha0sNighT/esx_poolcleaner
+
 
 # Getting Started
 
-1. Add esx_poolcleaner folder into resources
-2. Add in server.cfg
-3. Add esx_poolcleaner.sql to database
+Just drag and drop the folder into the workspace.
+Add the sql to your database.
+And you should be set.
 
 # Configuration
 
-1. Configuration only in config.lua
+All of the configuration is in the config.lua
 
-Thanks to Anthony for esx_garbage, which is the base of all of this.
-https://github.com/AnthonyEl
+# Reminder
+This isn't a very optimized script or I even wouldn't say the best coded one. I did this as a fun project on my server. If you have anything to add please make a pull request or create a issue. 
 
+# Support
 
-Updated bison is created by glennoconnell - https://www.gta5-mods.com/vehicles/updated-bravado-bison-low-end-construction-version-replace/
+You can also support me! 
+https://www.buymeacoffee.com/dannydoodmantv
