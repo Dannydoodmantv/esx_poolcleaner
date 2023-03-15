@@ -20,6 +20,35 @@ Config.Vehicles = {
 	Hash = "bison" -- Hash of the vehicle. All of the hashes can be found here https://gtahash.ru/car/
 }
 
+
+Config.WorkUniform = {
+	job_wear = {
+		male = {
+			['tshirt_1'] = 15, ['tshirt_2'] = 0,
+			['torso_1'] = 17, ['torso_2'] = 4,
+			['decals_1'] = 0, ['decals_2'] = 0,
+			['arms'] = 5,
+			['pants_1'] = 16, ['pants_2'] = 3,
+			['shoes_1'] = 16, ['shoes_2'] = 0,
+			['helmet_1'] = 15, ['helmet_2'] = 1,
+			['chain_1'] = 0, ['chain_2'] = 0,
+			['ears_1'] = -1, ['ears_2'] = 0
+		},
+		female = {
+			['tshirt_1'] = 2, ['tshirt_2'] = 0,
+			['torso_1'] = 195, ['torso_2'] = 24,
+			['decals_1'] = 0, ['decals_2'] = 0,
+			['arms'] = 15,
+			['pants_1'] = 16, ['pants_2'] = 11,
+			['shoes_1'] = 16, ['shoes_2'] = 4,
+			['helmet_1'] = -1, ['helmet_2'] = 0,
+			['chain_1'] = 0, ['chain_2'] = 0,
+			['ears_1'] = -1, ['ears_2'] = 0
+		}
+	  },
+}
+
+
 Config.Zones = {
 	Cloakroom = {
 		Pos = vector3(-1320.2,-1263.4,2.7),

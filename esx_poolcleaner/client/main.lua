@@ -46,7 +46,13 @@ function StartNPCJob()
 	local zone            = Config.Zones[NPCTargetPool]
 	Blips['NPCTargetPool'] = AddBlipForCoord(zone.Pos.x,  zone.Pos.y,  zone.Pos.z)
 	SetBlipRoute(Blips['NPCTargetPool'], true)
-    exports['mythic_notify']:SendAlert('warn', _U('GPS_info'))
+	lib.notify({
+		title = 'Pool Cleaner',
+		description = _U('GPS_info'),
+		type = 'error',
+		icon = 'person-digging',
+		position = 'top'
+	})
 	Done = true
 	Onjob = true
 
@@ -61,7 +67,13 @@ function StopNPCJob(cancel)
 	OnJob = false
 
 	if cancel then
-		exports['mythic_notify']:SendAlert('warn', _U('cancel_mission'))
+		lib.notify({
+			title = 'Pool Cleaner',
+			description = _U('cancel_mission'),
+			type = 'error',
+			icon = 'person-digging',
+			position = 'top'
+		})
 	else
 		TriggerServerEvent('p_cleanergive:givereceipt')
 		StartNPCJob()
@@ -97,9 +109,15 @@ Citizen.CreateThread(function()
 								move = true,
 							},
 							anim = {
-								dict = 'amb@world_human_maid_clean@',
-								clip = 'idle_e'
+								dict = 'timetable@maid@cleaning_surface@base',
+								clip = 'base'
 							},
+							prop = {
+								model = `prop_sponge_01`,
+								pos = vec3(-0.2, 0.2, 0.02),
+								rot = vec3(0.0, 0.0, -1.5)
+							},
+							bone = 60309
 						})
 						StopNPCJob() 
 						Done = false
@@ -135,8 +153,10 @@ RegisterNetEvent('p_setuniform')
 			title = 'Pool Cleaner',
 			description = _U('take_service_notif'),
 			type = 'success',
-			icon = 'person-digging'
+			icon = 'person-digging',
+			position = 'top'
 		})
+		setUniform('job_wear', playerPed)
 		onDuty = true
 		isinwork = true
 	elseif isinwork == true then
@@ -144,6 +164,7 @@ RegisterNetEvent('p_setuniform')
 			title = 'Pool Cleaner',
 			description = _U('already_w'),
 			type = 'error',
+			position = 'top',
 			icon = 'x'
 		})
 
@@ -170,16 +191,45 @@ RegisterNetEvent('p_setuniform')
 			title = 'Pool Cleaner',
 			description = _U('end_service_notif'),
 			type = 'error',
-			icon = 'person-digging'
+			icon = 'person-digging',
+			position = 'top'
 		})
 		isinwork = false
 		onDuty = false
+		ESX.TriggerServerCallback('esx_skin:getPlayerSkin', function(skin, jobSkin)
+			local model = nil
+
+			if skin.sex == 0 then
+			  model = GetHashKey("mp_m_freemode_01")
+			else
+			  model = GetHashKey("mp_f_freemode_01")
+			end
+
+			RequestModel(model)
+			while not HasModelLoaded(model) do
+			  RequestModel(model)
+			  Citizen.Wait(1)
+			end
+
+			SetPlayerModel(PlayerId(), model)
+			SetModelAsNoLongerNeeded(model)
+
+			TriggerEvent('skinchanger:loadSkin', skin)
+			TriggerEvent('esx:restoreLoadout')
+
+			local playerPed = GetPlayerPed(-1)
+			-- SetPedArmour(playerPed, 0)
+			ClearPedBloodDamage(playerPed)
+			ResetPedVisibleDamage(playerPed)
+			ClearPedLastWeaponDamage(playerPed)
+		end)	
 	elseif isinwork == false then
 		lib.notify({
 			title = 'Pool Cleaner',
 			description = _U('already_w'),
 			type = 'error',
-			icon = 'x'
+			icon = 'x',
+			position = 'top'
 		})
 	end
 	end)
@@ -189,15 +239,8 @@ RegisterNetEvent('p_setuniform')
 		local playerPed = GetPlayerPed(-1)
 		local coords    = Config.Zones.VehicleSpawnPoint.Pos
 		local Heading    = Config.Zones.VehicleSpawnPoint.Heading
-		local platenum = math.random(1000, 9999)
-		local platePrefix = Config.platePrefix
 		ESX.Game.SpawnVehicle('bison', coords, Heading, function(vehicle)
 			TaskWarpPedIntoVehicle(playerPed, vehicle, -1)
-			SetVehicleNumberPlateText(vehicle, platePrefix .. platenum)
-			plate = GetVehicleNumberPlateText(vehicle)
-			plate = string.gsub(plate, " ", "")
-			name = 'Véhicule de '..platePrefix
-			TriggerServerEvent('esx_vehiclelock:registerkeyjob', name, plate, 'no')
 		end)
 
 	end)
@@ -293,7 +336,7 @@ end
 Citizen.CreateThread(function()
 	while true do
 		Wait(1)
-		if PlayerData.job ~= nil then
+		if PlayerData.job ~= nil and  PlayerData.job.name == Config.nameJob then
 			local v1 = Config.Zones.Cloakroom.Pos
 			local v3 = Config.Zones.VehicleSpawn.Pos
 			local v4 = Config.Zones.VehicleDeleter.Pos
@@ -357,8 +400,6 @@ Citizen.CreateThread(function()
 						if IsControlJustReleased(1, Config.Key) then
 							ReceiptSell()
 						end
-					else	
-						lib.hideTextUI()	
 					end
 			
 			end
@@ -373,8 +414,8 @@ end)
 	Citizen.CreateThread(function()
 		while true do
 			Citizen.Wait(7)
-			
-			if IsControlJustReleased(1, Config.KeyJobStart) and onDuty == true then
+			--and onDuty == true
+			if IsControlJustReleased(1, Config.KeyJobStart) then
 				if Onjob then
 				StopNPCJob(true)
 				RemoveBlip(Blips['NPCTargetPool'])
@@ -385,10 +426,36 @@ end)
 				StartNPCJob()
 				Onjob = true
 			else
-				exports['mythic_notify']:SendAlert('error', _U('wrongcar'))
+				lib.notify({
+					title = 'Pool Cleaner',
+					description =_U('wrongcar'),
+					type = 'error',
+					icon = 'person-digging',
+					position = 'top'
+				})
 			end
 		end
 			end
 		end
 	end)
 
+	function setUniform(job, playerPed)
+		TriggerEvent('skinchanger:getSkin', function(skin)
+	  
+		  if skin.sex == 0 then
+			if Config.WorkUniform[job].male ~= nil then
+			  TriggerEvent('skinchanger:loadClothes', skin, Config.WorkUniform[job].male)
+			else
+			  ESX.ShowNotification(_U('no_outfit'))
+			end
+		  else
+			if Config.WorkUniform[job].female ~= nil then
+			  TriggerEvent('skinchanger:loadClothes', skin, Config.WorkUniform[job].female)
+			else
+			  ESX.ShowNotification(_U('no_outfit'))
+			end
+		  end
+	  
+		end)
+	  end
+	  
